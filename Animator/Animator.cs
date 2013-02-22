@@ -16,18 +16,22 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Text;
+using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace AnimatorNS
 {
     /// <summary>
     /// Animation manager
     /// </summary>
-    public class Animator : Component
+    [ProvideProperty("Decoration", typeof(Control))] 
+    public class Animator : Component, IExtenderProvider
     {
         IContainer components = null;
         protected List<QueueItem> queue = new List<QueueItem>();
-        private Timer tm = new Timer();
+        private Thread thread;
 
         /// <summary>
         /// Occurs when animation of the control is completed
@@ -52,7 +56,13 @@ namespace AnimatorNS
         /// <summary>
         /// Occurs when frame of animation is painting
         /// </summary>
-        public event EventHandler<PaintEventArgs> FramePaint;
+        public event EventHandler<PaintEventArgs> FramePainted;
+
+        /// <summary>
+        /// Max time of animation (ms)
+        /// </summary>
+        [DefaultValue(1500)]
+        public int MaxAnimationTime { get; set; }
 
         /// <summary>
         /// Default animation
@@ -78,10 +88,10 @@ namespace AnimatorNS
         /// Interval between frames (ms)
         /// </summary>
         [DefaultValue(10)]
-        public int Interval 
-        { 
-            get { return tm.Interval; }
-            set { tm.Interval = value; }
+        public int Interval
+        {
+            get;
+            set;
         }
 
         AnimationType animationType;
@@ -108,104 +118,173 @@ namespace AnimatorNS
         protected virtual void Init()
         {
             DefaultAnimation = new Animation();
-
+            MaxAnimationTime = 1500;
             TimeStep = 0.02f;
-            tm.Interval = 10;
-            tm.Tick += new EventHandler(tm_Tick);
-            tm.Start();
+            Interval = 10;
 
             Disposed += new EventHandler(Animator_Disposed);
+
+            //main working thread
+            thread = new Thread(Work);
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         void Animator_Disposed(object sender, EventArgs e)
         {
             ClearQueue();
-
-            tm.Stop();
-            tm.Dispose();
+            thread.Abort();
         }
 
-        void tm_Tick(object sender, EventArgs e)
+        void Work()
         {
-            tm.Stop();
+            while(true)
+            {
+                Thread.Sleep(Interval);
+                try
+                {
+                    var count = 0;
+                    var completed = new List<QueueItem>();
+                    var actived = new List<QueueItem>();
 
+                    //find completed
+                    lock (queue)
+                    {
+                        count = queue.Count;
+                        var wasActive = false;
+
+                        foreach (var item in queue)
+                        {
+                            if (item.IsActive) wasActive = true;
+
+                            if (item.controller != null && item.controller.IsCompleted)
+                                completed.Add(item);
+                            else
+                            {
+                                if (item.IsActive)
+                                {
+                                    if ((DateTime.Now - item.ActivateTime).TotalMilliseconds > MaxAnimationTime)
+                                        completed.Add(item);
+                                    else
+                                        actived.Add(item);
+                                }
+                            }
+                        }
+                        //start next animation
+                        if (!wasActive)
+                            foreach (var item in queue)
+                                if (!item.IsActive)
+                                {
+                                    actived.Add(item);
+                                    item.IsActive = true;
+                                    break;
+                                }
+                    }
+
+                    //completed
+                    foreach (var item in completed)
+                        OnCompleted(item);
+
+                    //build next frame of DoubleBitmap
+                    foreach (var item in actived)
+                        try
+                        {
+                            //build next frame of DoubleBitmap
+                            item.control.BeginInvoke(new MethodInvoker(() => DoAnimation(item)));
+                        }
+                        catch
+                        {
+                            //we can not start animation, remove from queue
+                            OnCompleted(item);
+                        }
+
+                    if (count == 0)
+                    {
+                        if (completed.Count > 0)
+                            OnAllAnimationsCompleted();
+                        CheckRequests();
+                    }
+                }
+                catch
+                {
+                    //form was closed
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check result state of controls
+        /// </summary>
+        private void CheckRequests()
+        {
+            var toRemove = new List<QueueItem>();
+
+            lock (requests)
+            {
+                var dict = new Dictionary<Control, QueueItem>();
+                foreach (var item in requests)
+                if(item.control != null)
+                {
+                    if (dict.ContainsKey(item.control))
+                        toRemove.Add(dict[item.control]);
+                    dict[item.control] = item;
+                }else
+                    toRemove.Add(item);
+
+                foreach(var item in dict.Values)
+                {
+                    if (item.control != null && !IsStateOK(item.control, item.mode))
+                        RepairState(item.control, item.mode);
+                    else
+                        toRemove.Add(item);
+                }
+
+                foreach (var item in toRemove)
+                    requests.Remove(item);
+            }
+        }
+
+        bool IsStateOK(Control control, AnimateMode mode)
+        {
+            switch (mode)
+            {
+                case AnimateMode.Hide: return !control.Visible;
+                case AnimateMode.Show: return control.Visible;
+            }
+
+            return true;
+        }
+
+        void RepairState(Control control, AnimateMode mode)
+        {
+            control.BeginInvoke(new MethodInvoker(() =>
+            {
+                switch (mode)
+                {
+                    case AnimateMode.Hide: control.Visible = false; break;
+                    case AnimateMode.Show: control.Visible = true; break;
+                }
+            }));
+        }
+
+        private void DoAnimation(QueueItem item)
+        {
+            if(Monitor.TryEnter(item))
             try
             {
-                var count = 0;
-                var completed = new List<QueueItem>();
-                var actived = new List<QueueItem>();
-
-                //find completed
-                lock (queue)
+                if (item.controller == null)
                 {
-                    count = queue.Count;
-                    var wasActive = false;
-
-                    foreach (var item in queue)
-                    {
-                        if (item.isActive) wasActive = true;
-
-                        if (item.bmp != null && item.bmp.IsCompleted)
-                        {
-                            //dispose DoubleBitmap
-                            item.bmp.Dispose();
-                            completed.Add(item);
-                        }
-                        else
-                        {
-                            if (item.isActive)
-                                //build next frame of DoubleBitmap
-                                actived.Add(item);
-                        }
-                    }
-                    //start next animation
-                    if(!wasActive)
-                    foreach(var item in queue)
-                        if(!item.isActive)
-                        {
-                            actived.Add(item);
-                            item.isActive = true;
-                            break;
-                        }
+                    item.controller = CreateDoubleBitmap(item.control, item.mode, item.animation,
+                                                         item.clipRectangle);
                 }
-
-                //build next frame of DoubleBitmap
-                foreach (var item in actived)
-                {
-                    try
-                    {
-                        if (item.bmp == null)
-                            item.bmp = CreateDoubleBitmap(item.control, item.mode, item.animation, item.clipRectangle);
-                        item.bmp.BuildNextFrame();
-                    }catch
-                    {
-                        completed.Add(item);
-                    }
-                }
-
-                //call events
-                foreach (var item in completed)
-                {
-                    OnAnimationCompleted(new AnimationCompletedEventArg
-                                             {Animation = item.animation, Mode = item.mode, Control = item.control});
-                }
-                
-                var allCompleted = false;
-                lock(queue)
-                    allCompleted = queue.Count == 0 && completed.Count > 0;
-
-                if(allCompleted)
-                    OnAllAnimationsCompleted();
-
-                //remove completed from queue
-                lock(queue)
-                foreach (var item in completed)
-                    queue.Remove(item);
+                if (item.controller.IsCompleted)
+                    return;
+                item.controller.BuildNextFrame();
             }
             catch
-            {}
-
-            tm.Start();
+            {
+                OnCompleted(item);
+            }
         }
 
         private void InitDefaultAnimation(AnimatorNS.AnimationType animationType)
@@ -299,7 +378,7 @@ namespace AnimatorNS
                 lock (queue)
                     foreach (var item in queue)
                         if (item.control == control && item.mode == AnimateMode.BeginUpdate)
-                            if (item.bmp == null)
+                            if (item.controller == null)
                                 wait = true;
 
                 if (wait)
@@ -319,7 +398,7 @@ namespace AnimatorNS
                 foreach (var item in queue)
                     if (item.control == control && item.mode == AnimateMode.BeginUpdate)
                     {
-                        item.bmp.EndUpdate();
+                        item.controller.EndUpdate();
                         item.mode = AnimateMode.Update;
                     }
             }
@@ -368,6 +447,20 @@ namespace AnimatorNS
             }
         }
 
+        List<QueueItem> requests = new List<QueueItem>();
+
+        void OnCompleted(QueueItem item)
+        {
+            if (item.controller != null)
+            {
+                item.controller.Dispose();
+            }
+            lock (queue)
+                queue.Remove(item);
+
+            OnAnimationCompleted(new AnimationCompletedEventArg { Animation = item.animation, Control = item.control, Mode = item.mode });
+        }
+
         /// <summary>
         /// Adds the contol to animation queue.
         /// </summary>
@@ -380,20 +473,28 @@ namespace AnimatorNS
             if(animation == null)
                 animation = DefaultAnimation;
 
+            if (control is IFakeControl)
+            {
+                control.Visible = false;
+                return;
+            }
+
+            var item = new QueueItem() { animation = animation, control = control, IsActive = parallel, mode = mode, clipRectangle = clipRectangle };
+
             //check visible state
             switch (mode)
             {
                 case AnimateMode.Show:
                     if (control.Visible)//already showed
                     {
-                        OnAnimationCompleted(new AnimationCompletedEventArg{Animation = animation, Control = control, Mode = mode});
+                        OnCompleted(new QueueItem {control = control, mode = mode});
                         return;
                     }
                     break;
                 case AnimateMode.Hide:
-                    if (!control.Visible)//already hiden
+                    if (!control.Visible)//already hidden
                     {
-                        OnAnimationCompleted(new AnimationCompletedEventArg { Animation = animation, Control = control, Mode = mode });
+                        OnCompleted(new QueueItem { control = control, mode = mode });
                         return;
                     }
                     break;
@@ -401,28 +502,42 @@ namespace AnimatorNS
 
             //add to queue
             lock (queue)
-                queue.Add(new QueueItem() { animation = animation, control = control, isActive = parallel, mode = mode, clipRectangle = clipRectangle });
+                queue.Add(item);
+            lock (requests)
+                requests.Add(item);
         }
 
-        private DoubleBitmap CreateDoubleBitmap(Control control, AnimateMode mode, Animation animation, Rectangle clipRect)
+        private Controller CreateDoubleBitmap(Control control, AnimateMode mode, Animation animation, Rectangle clipRect)
         {
-            var bmp = new DoubleBitmap(control, mode, animation, TimeStep, clipRect);
-            bmp.TransfromNeeded += OnTransformNeeded;
-            bmp.NonLinearTransfromNeeded += OnNonLinearTransfromNeeded;
-            bmp.MouseDown += OnMouseDown;
-            bmp.Cursor = Cursor;
-            return bmp;
+            var controller = new Controller(control, mode, animation, TimeStep, clipRect);
+            controller.TransfromNeeded += OnTransformNeeded;
+            controller.NonLinearTransfromNeeded += OnNonLinearTransfromNeeded;
+            controller.MouseDown += OnMouseDown;
+            controller.DoubleBitmap.Cursor = Cursor;
+            controller.FramePainted += OnFramePainted;
+            return controller;
+        }
+
+        void OnFramePainted(object sender, PaintEventArgs e)
+        {
+            if (FramePainted != null)
+                FramePainted(sender, e);
         }
 
         protected virtual void OnMouseDown(object sender, MouseEventArgs e)
         {
-            //transform point to animated control's coordinates 
-            var db = (DoubleBitmap) sender;
-            var l = e.Location;
-            l.Offset(db.Left - db.AnimatedControl.Left, db.Top - db.AnimatedControl.Top);
-            //
-            if (MouseDown != null)
-                MouseDown(sender, new MouseEventArgs(e.Button, e.Clicks, l.X, l.Y, e.Delta));
+            try
+            {
+                //transform point to animated control's coordinates 
+                var db = (Controller) sender;
+                var l = e.Location;
+                l.Offset(db.DoubleBitmap.Left - db.AnimatedControl.Left, db.DoubleBitmap.Top - db.AnimatedControl.Top);
+                //
+                if (MouseDown != null)
+                    MouseDown(sender, new MouseEventArgs(e.Button, e.Clicks, l.X, l.Y, e.Delta));
+            }catch
+            {
+            }
         }
 
         protected virtual void OnNonLinearTransfromNeeded(object sender, NonLinearTransfromNeededEventArg e)
@@ -453,10 +568,18 @@ namespace AnimatorNS
                 queue.Clear();
             }
 
+
             foreach (var item in items)
             {
-                if (item.bmp != null)
-                    item.bmp.Dispose();
+                if (item.control != null)
+                    item.control.BeginInvoke(new MethodInvoker(() =>
+                    {
+                        switch (item.mode)
+                        {
+                            case AnimateMode.Hide: item.control.Visible = false; break;
+                            case AnimateMode.Show: item.control.Visible = true; break;
+                        }
+                    }));
                 OnAnimationCompleted(new AnimationCompletedEventArg { Animation = item.animation, Control = item.control, Mode = item.mode });
             }
 
@@ -481,14 +604,80 @@ namespace AnimatorNS
         protected class QueueItem
         {
             public Animation animation;
-            public DoubleBitmap bmp;
+            public Controller controller;
             public Control control;
-            public bool isActive;
+            public DateTime ActivateTime { get; private set;}
             public AnimateMode mode;
             public Rectangle clipRectangle;
+
+            public bool isActive;
+            public bool IsActive
+            {
+                get { return isActive; }
+                set
+                {
+                    if (isActive == value) return;
+                    isActive = value;
+                    if (value)
+                        ActivateTime = DateTime.Now;
+                }
+            }
+
+            public override string ToString()
+            {
+                StringBuilder sb = new StringBuilder();
+                if (control != null)
+                    sb.Append(control.GetType().Name + " ");
+                sb.Append(mode);
+                return sb.ToString();
+            }
         }
 
         #endregion
+
+        #region IExtenderProvider
+
+        public DecorationType GetDecoration(Control control)
+        {
+            if (DecorationByControls.ContainsKey(control))
+                return DecorationByControls[control].DecorationType;
+            else
+                return DecorationType.None;
+        }
+        
+        public void SetDecoration(Control control, DecorationType decoration)
+        {
+            var wrapper = DecorationByControls.ContainsKey(control) ? DecorationByControls[control] : null;
+            if (decoration == DecorationType.None)
+            {
+                if (wrapper!=null)
+                    wrapper.Dispose();
+                DecorationByControls.Remove(control);
+            }
+            else
+            {
+                if (wrapper == null)
+                    wrapper = new DecorationControl(decoration, control);
+                wrapper.DecorationType = decoration;
+                DecorationByControls[control] = wrapper;
+            }
+        }
+
+        private readonly Dictionary<Control, DecorationControl> DecorationByControls = new Dictionary<Control, DecorationControl>();
+
+        public bool CanExtend(object extendee)
+        {
+            return extendee is Control;
+        }
+
+        #endregion
+    }
+
+    public enum DecorationType
+    {
+        None,
+        BottomMirror,
+        Custom
     }
 
 
@@ -509,6 +698,7 @@ namespace AnimatorNS
         public Matrix Matrix { get; set; }
         public float CurrentTime { get; internal set; }
         public Rectangle ClientRectangle { get; internal set; }
+        public Rectangle ClipRectangle { get; internal set; }
         public Animation Animation { get; set; }
         public Control Control { get; internal set; }
         public AnimateMode Mode { get; internal set; }
@@ -518,9 +708,15 @@ namespace AnimatorNS
     public class NonLinearTransfromNeededEventArg : EventArgs
     {
         public float CurrentTime { get; internal set; }
+
         public Rectangle ClientRectangle { get; internal set; }
         public byte[] Pixels { get; internal set; }
         public int Stride { get; internal set; }
+
+        public Rectangle SourceClientRectangle { get; internal set; }
+        public byte[] SourcePixels { get; internal set; }
+        public int SourceStride { get; set; }
+
         public Animation Animation { get; set; }
         public Control Control { get; internal set; }
         public AnimateMode Mode { get; internal set; }

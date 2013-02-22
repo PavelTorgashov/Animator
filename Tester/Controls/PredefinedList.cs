@@ -28,5 +28,11 @@ namespace Tester.Controls
                     Changed(this, EventArgs.Empty);
             }
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            rbHorizSlide.Checked = true;
+            //rbHorizBlind_CheckedChanged(rbHorizSlide, EventArgs.Empty);
+        }
     }
 }

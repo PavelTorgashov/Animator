@@ -299,5 +299,10 @@ namespace Tester
         {
             new AnimatedTabsSample().Show();
         }
+
+        private void btDecoration_Click(object sender, EventArgs e)
+        {
+            new DecorationSample().Show();
+        }
     }
 }

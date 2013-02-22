@@ -42,14 +42,21 @@
     <Compile Include="Animator.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DoubleBitmap.cs">
-      <SubType>Component</SubType>
+    <Compile Include="Controller.cs" />
+    <Compile Include="DecorationControl.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="ExtendedControls\TabControlEx.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ExtendedControls\TabControlEx.Designer.cs">
       <DependentUpon>TabControlEx.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DoubleBitmapControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DoubleBitmapControl.Designer.cs">
+      <DependentUpon>DoubleBitmapControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PointFConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

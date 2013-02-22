@@ -72,8 +72,11 @@
             // 
             this.animator.AnimationType = AnimatorNS.AnimationType.Mosaic;
             this.animator.Cursor = null;
+            animation1.AnimateOnlyDifferences = true;
             animation1.BlindCoeff = ((System.Drawing.PointF)(resources.GetObject("animation1.BlindCoeff")));
             animation1.LeafCoeff = 0F;
+            animation1.MaxTime = 1F;
+            animation1.MinTime = 0F;
             animation1.MosaicCoeff = ((System.Drawing.PointF)(resources.GetObject("animation1.MosaicCoeff")));
             animation1.MosaicShift = ((System.Drawing.PointF)(resources.GetObject("animation1.MosaicShift")));
             animation1.MosaicSize = 20;

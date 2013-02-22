@@ -18,7 +18,7 @@ namespace AnimatorNS
             InitializeComponent();
             animator = new Animator();
             animator.AnimationType = AnimationType.VertSlide;
-            animator.DefaultAnimation.TimeCoeff = 1.5f;
+            animator.DefaultAnimation.TimeCoeff = 1f;
             animator.DefaultAnimation.AnimateOnlyDifferences = false;
         }
 

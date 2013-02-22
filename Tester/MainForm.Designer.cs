@@ -40,9 +40,13 @@
             System.Windows.Forms.TreeNode treeNode7 = new System.Windows.Forms.TreeNode("Node6");
             System.Windows.Forms.TreeNode treeNode8 = new System.Windows.Forms.TreeNode("Node7");
             System.Windows.Forms.TreeNode treeNode9 = new System.Windows.Forms.TreeNode("Node8");
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             AnimatorNS.Animation animation1 = new AnimatorNS.Animation();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.pnTop = new System.Windows.Forms.Panel();
+            this.label4 = new System.Windows.Forms.Label();
+            this.btDecoration = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.btAnimatedTabs = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.btExample1 = new System.Windows.Forms.Button();
             this.rbCustom = new System.Windows.Forms.RadioButton();
@@ -142,8 +146,6 @@
             this.btHide = new System.Windows.Forms.Button();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.animator = new AnimatorNS.Animator(this.components);
-            this.label3 = new System.Windows.Forms.Label();
-            this.btAnimatedTabs = new System.Windows.Forms.Button();
             this.pnTop.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tcMain.SuspendLayout();
@@ -163,18 +165,64 @@
             this.pnTop.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pnTop.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnTop.Controls.Add(this.label4);
+            this.pnTop.Controls.Add(this.btDecoration);
             this.pnTop.Controls.Add(this.label3);
             this.pnTop.Controls.Add(this.btAnimatedTabs);
             this.pnTop.Controls.Add(this.label1);
             this.pnTop.Controls.Add(this.btExample1);
+            this.animator.SetDecoration(this.pnTop, AnimatorNS.DecorationType.None);
             this.pnTop.Location = new System.Drawing.Point(218, 11);
             this.pnTop.Name = "pnTop";
             this.pnTop.Size = new System.Drawing.Size(645, 84);
             this.pnTop.TabIndex = 0;
             // 
+            // label4
+            // 
+            this.animator.SetDecoration(this.label4, AnimatorNS.DecorationType.None);
+            this.label4.Location = new System.Drawing.Point(248, 10);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(147, 24);
+            this.label4.TabIndex = 9;
+            this.label4.Text = "Decoration sample";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // btDecoration
+            // 
+            this.animator.SetDecoration(this.btDecoration, AnimatorNS.DecorationType.None);
+            this.btDecoration.Location = new System.Drawing.Point(401, 10);
+            this.btDecoration.Name = "btDecoration";
+            this.btDecoration.Size = new System.Drawing.Size(75, 23);
+            this.btDecoration.TabIndex = 8;
+            this.btDecoration.Text = "Show";
+            this.btDecoration.UseVisualStyleBackColor = true;
+            this.btDecoration.Click += new System.EventHandler(this.btDecoration_Click);
+            // 
+            // label3
+            // 
+            this.animator.SetDecoration(this.label3, AnimatorNS.DecorationType.None);
+            this.label3.Location = new System.Drawing.Point(3, 40);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(147, 24);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "Animated tabs sample";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // btAnimatedTabs
+            // 
+            this.animator.SetDecoration(this.btAnimatedTabs, AnimatorNS.DecorationType.None);
+            this.btAnimatedTabs.Location = new System.Drawing.Point(156, 41);
+            this.btAnimatedTabs.Name = "btAnimatedTabs";
+            this.btAnimatedTabs.Size = new System.Drawing.Size(75, 23);
+            this.btAnimatedTabs.TabIndex = 6;
+            this.btAnimatedTabs.Text = "Show";
+            this.btAnimatedTabs.UseVisualStyleBackColor = true;
+            this.btAnimatedTabs.Click += new System.EventHandler(this.btAnimatedTabs_Click);
+            // 
             // label1
             // 
-            this.label1.Location = new System.Drawing.Point(3, 11);
+            this.animator.SetDecoration(this.label1, AnimatorNS.DecorationType.None);
+            this.label1.Location = new System.Drawing.Point(6, 9);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(147, 24);
             this.label1.TabIndex = 5;
@@ -183,6 +231,7 @@
             // 
             // btExample1
             // 
+            this.animator.SetDecoration(this.btExample1, AnimatorNS.DecorationType.None);
             this.btExample1.Location = new System.Drawing.Point(156, 10);
             this.btExample1.Name = "btExample1";
             this.btExample1.Size = new System.Drawing.Size(75, 23);
@@ -194,6 +243,7 @@
             // rbCustom
             // 
             this.rbCustom.AutoSize = true;
+            this.animator.SetDecoration(this.rbCustom, AnimatorNS.DecorationType.None);
             this.rbCustom.Location = new System.Drawing.Point(5, 101);
             this.rbCustom.Name = "rbCustom";
             this.rbCustom.Size = new System.Drawing.Size(108, 17);
@@ -206,6 +256,7 @@
             // rbAdjusted
             // 
             this.rbAdjusted.AutoSize = true;
+            this.animator.SetDecoration(this.rbAdjusted, AnimatorNS.DecorationType.None);
             this.rbAdjusted.Location = new System.Drawing.Point(5, 78);
             this.rbAdjusted.Name = "rbAdjusted";
             this.rbAdjusted.Size = new System.Drawing.Size(122, 17);
@@ -218,6 +269,7 @@
             // rbCombination
             // 
             this.rbCombination.AutoSize = true;
+            this.animator.SetDecoration(this.rbCombination, AnimatorNS.DecorationType.None);
             this.rbCombination.Location = new System.Drawing.Point(5, 55);
             this.rbCombination.Name = "rbCombination";
             this.rbCombination.Size = new System.Drawing.Size(201, 17);
@@ -230,6 +282,7 @@
             // rbPredefined
             // 
             this.rbPredefined.AutoSize = true;
+            this.animator.SetDecoration(this.rbPredefined, AnimatorNS.DecorationType.None);
             this.rbPredefined.Location = new System.Drawing.Point(5, 32);
             this.rbPredefined.Name = "rbPredefined";
             this.rbPredefined.Size = new System.Drawing.Size(129, 17);
@@ -243,6 +296,7 @@
             // 
             this.groupBox1.Controls.Add(this.radioButton2);
             this.groupBox1.Controls.Add(this.radioButton1);
+            this.animator.SetDecoration(this.groupBox1, AnimatorNS.DecorationType.None);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.groupBox1.Location = new System.Drawing.Point(9, 129);
             this.groupBox1.Name = "groupBox1";
@@ -255,6 +309,7 @@
             // radioButton2
             // 
             this.radioButton2.AutoSize = true;
+            this.animator.SetDecoration(this.radioButton2, AnimatorNS.DecorationType.None);
             this.radioButton2.Location = new System.Drawing.Point(19, 68);
             this.radioButton2.Name = "radioButton2";
             this.radioButton2.Size = new System.Drawing.Size(90, 17);
@@ -266,6 +321,7 @@
             // radioButton1
             // 
             this.radioButton1.AutoSize = true;
+            this.animator.SetDecoration(this.radioButton1, AnimatorNS.DecorationType.None);
             this.radioButton1.Location = new System.Drawing.Point(19, 36);
             this.radioButton1.Name = "radioButton1";
             this.radioButton1.Size = new System.Drawing.Size(90, 17);
@@ -283,6 +339,7 @@
             this.tcMain.Controls.Add(this.tpDataGrid);
             this.tcMain.Controls.Add(this.tpTabPages);
             this.tcMain.Controls.Add(this.tpUpdateMode);
+            this.animator.SetDecoration(this.tcMain, AnimatorNS.DecorationType.None);
             this.tcMain.Location = new System.Drawing.Point(218, 113);
             this.tcMain.Name = "tcMain";
             this.tcMain.SelectedIndex = 0;
@@ -292,6 +349,7 @@
             // 
             // tpImage
             // 
+            this.animator.SetDecoration(this.tpImage, AnimatorNS.DecorationType.None);
             this.tpImage.Location = new System.Drawing.Point(4, 22);
             this.tpImage.Name = "tpImage";
             this.tpImage.Padding = new System.Windows.Forms.Padding(3);
@@ -302,6 +360,7 @@
             // 
             // tpSimpleControls
             // 
+            this.animator.SetDecoration(this.tpSimpleControls, AnimatorNS.DecorationType.None);
             this.tpSimpleControls.Location = new System.Drawing.Point(4, 22);
             this.tpSimpleControls.Name = "tpSimpleControls";
             this.tpSimpleControls.Padding = new System.Windows.Forms.Padding(3);
@@ -312,6 +371,7 @@
             // 
             // tpDataGrid
             // 
+            this.animator.SetDecoration(this.tpDataGrid, AnimatorNS.DecorationType.None);
             this.tpDataGrid.Location = new System.Drawing.Point(4, 22);
             this.tpDataGrid.Name = "tpDataGrid";
             this.tpDataGrid.Size = new System.Drawing.Size(625, 0);
@@ -321,6 +381,7 @@
             // 
             // tpTabPages
             // 
+            this.animator.SetDecoration(this.tpTabPages, AnimatorNS.DecorationType.None);
             this.tpTabPages.Location = new System.Drawing.Point(4, 22);
             this.tpTabPages.Name = "tpTabPages";
             this.tpTabPages.Size = new System.Drawing.Size(625, 0);
@@ -330,6 +391,7 @@
             // 
             // tpUpdateMode
             // 
+            this.animator.SetDecoration(this.tpUpdateMode, AnimatorNS.DecorationType.None);
             this.tpUpdateMode.Location = new System.Drawing.Point(4, 22);
             this.tpUpdateMode.Name = "tpUpdateMode";
             this.tpUpdateMode.Padding = new System.Windows.Forms.Padding(3);
@@ -361,6 +423,7 @@
             this.pnMain.Controls.Add(this.menuStrip1);
             this.pnMain.Controls.Add(this.progressBar1);
             this.pnMain.Controls.Add(this.lbUpdate);
+            this.animator.SetDecoration(this.pnMain, AnimatorNS.DecorationType.None);
             this.pnMain.Location = new System.Drawing.Point(218, 135);
             this.pnMain.Name = "pnMain";
             this.pnMain.Size = new System.Drawing.Size(633, 382);
@@ -369,6 +432,7 @@
             // lb
             // 
             this.lb.AutoSize = true;
+            this.animator.SetDecoration(this.lb, AnimatorNS.DecorationType.None);
             this.lb.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.lb.Location = new System.Drawing.Point(282, 280);
             this.lb.Name = "lb";
@@ -385,7 +449,8 @@
             this.flowLayoutPanel1.Controls.Add(this.button3);
             this.flowLayoutPanel1.Controls.Add(this.button4);
             this.flowLayoutPanel1.Controls.Add(this.button5);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(384, 108);
+            this.animator.SetDecoration(this.flowLayoutPanel1, AnimatorNS.DecorationType.None);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(440, 108);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(188, 181);
             this.flowLayoutPanel1.TabIndex = 36;
@@ -393,6 +458,7 @@
             // 
             // button1
             // 
+            this.animator.SetDecoration(this.button1, AnimatorNS.DecorationType.None);
             this.button1.Location = new System.Drawing.Point(3, 3);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
@@ -402,6 +468,7 @@
             // 
             // button2
             // 
+            this.animator.SetDecoration(this.button2, AnimatorNS.DecorationType.None);
             this.button2.Location = new System.Drawing.Point(84, 3);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
@@ -411,6 +478,7 @@
             // 
             // button3
             // 
+            this.animator.SetDecoration(this.button3, AnimatorNS.DecorationType.None);
             this.button3.Location = new System.Drawing.Point(3, 32);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
@@ -420,6 +488,7 @@
             // 
             // button4
             // 
+            this.animator.SetDecoration(this.button4, AnimatorNS.DecorationType.None);
             this.button4.Location = new System.Drawing.Point(84, 32);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
@@ -429,6 +498,7 @@
             // 
             // button5
             // 
+            this.animator.SetDecoration(this.button5, AnimatorNS.DecorationType.None);
             this.button5.Location = new System.Drawing.Point(3, 61);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(75, 23);
@@ -444,7 +514,8 @@
             this.Column7,
             this.Column8,
             this.Column9});
-            this.dataGridView2.Location = new System.Drawing.Point(42, 110);
+            this.animator.SetDecoration(this.dataGridView2, AnimatorNS.DecorationType.None);
+            this.dataGridView2.Location = new System.Drawing.Point(28, 110);
             this.dataGridView2.Name = "dataGridView2";
             this.dataGridView2.RowHeadersVisible = false;
             this.dataGridView2.Size = new System.Drawing.Size(303, 179);
@@ -468,6 +539,7 @@
             // 
             // listBox1
             // 
+            this.animator.SetDecoration(this.listBox1, AnimatorNS.DecorationType.None);
             this.listBox1.FormattingEnabled = true;
             this.listBox1.Items.AddRange(new object[] {
             "ListBox Item 1",
@@ -486,15 +558,18 @@
             // 
             // comboBox1
             // 
+            this.animator.SetDecoration(this.comboBox1, AnimatorNS.DecorationType.None);
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Location = new System.Drawing.Point(408, 140);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(121, 21);
             this.comboBox1.TabIndex = 32;
+            this.comboBox1.Text = "Combobox";
             this.comboBox1.Visible = false;
             // 
             // treeView1
             // 
+            this.animator.SetDecoration(this.treeView1, AnimatorNS.DecorationType.None);
             this.treeView1.Location = new System.Drawing.Point(226, 101);
             this.treeView1.Name = "treeView1";
             treeNode1.Name = "Node1";
@@ -529,6 +604,7 @@
             // 
             // statusStrip1
             // 
+            this.animator.SetDecoration(this.statusStrip1, AnimatorNS.DecorationType.None);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.toolStripProgressBar1,
@@ -562,6 +638,7 @@
             // 
             // toolStrip1
             // 
+            this.animator.SetDecoration(this.toolStrip1, AnimatorNS.DecorationType.None);
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newToolStripButton,
             this.openToolStripButton,
@@ -665,6 +742,7 @@
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
+            this.animator.SetDecoration(this.checkBox1, AnimatorNS.DecorationType.None);
             this.checkBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.checkBox1.Location = new System.Drawing.Point(408, 31);
             this.checkBox1.Name = "checkBox1";
@@ -676,8 +754,9 @@
             // 
             // pictureBox1
             // 
+            this.animator.SetDecoration(this.pictureBox1, AnimatorNS.DecorationType.None);
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(246, 102);
+            this.pictureBox1.Location = new System.Drawing.Point(202, 102);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(200, 150);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
@@ -687,6 +766,7 @@
             // 
             // bt
             // 
+            this.animator.SetDecoration(this.bt, AnimatorNS.DecorationType.None);
             this.bt.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.bt.Location = new System.Drawing.Point(450, 250);
             this.bt.Name = "bt";
@@ -707,6 +787,7 @@
             this.Column4,
             this.Column5,
             this.Column6});
+            this.animator.SetDecoration(this.dataGridView1, AnimatorNS.DecorationType.None);
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
@@ -746,6 +827,7 @@
             // 
             // textBox1
             // 
+            this.animator.SetDecoration(this.textBox1, AnimatorNS.DecorationType.None);
             this.textBox1.Location = new System.Drawing.Point(8, 23);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
@@ -757,6 +839,7 @@
             // 
             // menuStrip1
             // 
+            this.animator.SetDecoration(this.menuStrip1, AnimatorNS.DecorationType.None);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
@@ -993,6 +1076,7 @@
             // 
             // progressBar1
             // 
+            this.animator.SetDecoration(this.progressBar1, AnimatorNS.DecorationType.None);
             this.progressBar1.Location = new System.Drawing.Point(16, 280);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(151, 20);
@@ -1003,6 +1087,7 @@
             // lbUpdate
             // 
             this.lbUpdate.AutoSize = true;
+            this.animator.SetDecoration(this.lbUpdate, AnimatorNS.DecorationType.None);
             this.lbUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.lbUpdate.Location = new System.Drawing.Point(47, 27);
             this.lbUpdate.Name = "lbUpdate";
@@ -1025,6 +1110,7 @@
             this.pnLeft.Controls.Add(this.tbCode);
             this.pnLeft.Controls.Add(this.pg);
             this.pnLeft.Controls.Add(this.predefinedList1);
+            this.animator.SetDecoration(this.pnLeft, AnimatorNS.DecorationType.None);
             this.pnLeft.Location = new System.Drawing.Point(4, 11);
             this.pnLeft.Name = "pnLeft";
             this.pnLeft.Size = new System.Drawing.Size(206, 530);
@@ -1033,6 +1119,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
+            this.animator.SetDecoration(this.label2, AnimatorNS.DecorationType.None);
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.label2.Location = new System.Drawing.Point(4, 5);
             this.label2.Name = "label2";
@@ -1045,6 +1132,7 @@
             this.predefinedList2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.animator.SetDecoration(this.predefinedList2, AnimatorNS.DecorationType.None);
             this.predefinedList2.Location = new System.Drawing.Point(0, 137);
             this.predefinedList2.Name = "predefinedList2";
             this.predefinedList2.Size = new System.Drawing.Size(204, 387);
@@ -1057,6 +1145,7 @@
             this.tbCode.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.animator.SetDecoration(this.tbCode, AnimatorNS.DecorationType.None);
             this.tbCode.Location = new System.Drawing.Point(0, 137);
             this.tbCode.Multiline = true;
             this.tbCode.Name = "tbCode";
@@ -1073,6 +1162,7 @@
             this.pg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.animator.SetDecoration(this.pg, AnimatorNS.DecorationType.None);
             this.pg.Location = new System.Drawing.Point(2, 137);
             this.pg.Name = "pg";
             this.pg.Size = new System.Drawing.Size(200, 388);
@@ -1085,6 +1175,7 @@
             this.predefinedList1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.animator.SetDecoration(this.predefinedList1, AnimatorNS.DecorationType.None);
             this.predefinedList1.Location = new System.Drawing.Point(0, 137);
             this.predefinedList1.Name = "predefinedList1";
             this.predefinedList1.Size = new System.Drawing.Size(204, 387);
@@ -1095,6 +1186,7 @@
             // btAnimate
             // 
             this.btAnimate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.animator.SetDecoration(this.btAnimate, AnimatorNS.DecorationType.None);
             this.btAnimate.Location = new System.Drawing.Point(741, 523);
             this.btAnimate.Name = "btAnimate";
             this.btAnimate.Size = new System.Drawing.Size(106, 23);
@@ -1106,6 +1198,7 @@
             // btShow
             // 
             this.btShow.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.animator.SetDecoration(this.btShow, AnimatorNS.DecorationType.None);
             this.btShow.Location = new System.Drawing.Point(219, 523);
             this.btShow.Name = "btShow";
             this.btShow.Size = new System.Drawing.Size(75, 23);
@@ -1117,6 +1210,7 @@
             // btHide
             // 
             this.btHide.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.animator.SetDecoration(this.btHide, AnimatorNS.DecorationType.None);
             this.btHide.Location = new System.Drawing.Point(300, 523);
             this.btHide.Name = "btHide";
             this.btHide.Size = new System.Drawing.Size(75, 23);
@@ -1135,8 +1229,11 @@
             // 
             this.animator.AnimationType = AnimatorNS.AnimationType.Custom;
             this.animator.Cursor = null;
+            animation1.AnimateOnlyDifferences = true;
             animation1.BlindCoeff = ((System.Drawing.PointF)(resources.GetObject("animation1.BlindCoeff")));
             animation1.LeafCoeff = 0F;
+            animation1.MaxTime = 1F;
+            animation1.MinTime = 0F;
             animation1.MosaicCoeff = ((System.Drawing.PointF)(resources.GetObject("animation1.MosaicCoeff")));
             animation1.MosaicShift = ((System.Drawing.PointF)(resources.GetObject("animation1.MosaicShift")));
             animation1.MosaicSize = 1;
@@ -1150,25 +1247,6 @@
             this.animator.DefaultAnimation = animation1;
             this.animator.TransfromNeeded += new System.EventHandler<AnimatorNS.TransfromNeededEventArg>(this.animator_TransfromNeeded);
             // 
-            // label3
-            // 
-            this.label3.Location = new System.Drawing.Point(3, 40);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(147, 24);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "Animated tabs sample";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // btAnimatedTabs
-            // 
-            this.btAnimatedTabs.Location = new System.Drawing.Point(156, 41);
-            this.btAnimatedTabs.Name = "btAnimatedTabs";
-            this.btAnimatedTabs.Size = new System.Drawing.Size(75, 23);
-            this.btAnimatedTabs.TabIndex = 6;
-            this.btAnimatedTabs.Text = "Show";
-            this.btAnimatedTabs.UseVisualStyleBackColor = true;
-            this.btAnimatedTabs.Click += new System.EventHandler(this.btAnimatedTabs_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1181,6 +1259,7 @@
             this.Controls.Add(this.pnLeft);
             this.Controls.Add(this.tcMain);
             this.Controls.Add(this.pnTop);
+            this.animator.SetDecoration(this, AnimatorNS.DecorationType.None);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Animator Demo";
@@ -1310,5 +1389,7 @@
         private System.Windows.Forms.Label lbUpdate;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btAnimatedTabs;
+        private System.Windows.Forms.Button btDecoration;
+        private System.Windows.Forms.Label label4;
     }
 }

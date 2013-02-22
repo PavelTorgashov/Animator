@@ -60,7 +60,7 @@
             animation1.RotateLimit = 0F;
             animation1.ScaleCoeff = ((System.Drawing.PointF)(resources.GetObject("animation1.ScaleCoeff")));
             animation1.SlideCoeff = ((System.Drawing.PointF)(resources.GetObject("animation1.SlideCoeff")));
-            animation1.TimeCoeff = 1.5F;
+            animation1.TimeCoeff = 1F;
             animation1.TransparencyCoeff = 0F;
             this.animatedTabs1.Animation = animation1;
             this.animatedTabs1.Controls.Add(this.tabPage1);

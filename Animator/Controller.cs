@@ -3,6 +3,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Security.Permissions;
 using System.Windows.Forms;
 
 namespace AnimatorNS
@@ -10,37 +11,55 @@ namespace AnimatorNS
     /// <summary>
     /// DoubleBitmap displays animation
     /// </summary>
-    public class DoubleBitmap: Control
+    public class Controller
     {
-        protected Bitmap bgBmp;
+        protected Bitmap BgBmp{get { return (DoubleBitmap as IFakeControl).BgBmp; } set { (DoubleBitmap as IFakeControl).BgBmp = value; } }
+        public Bitmap Frame { get { return (DoubleBitmap as IFakeControl).Frame; } set { (DoubleBitmap as IFakeControl).Frame = value; } }
         protected Bitmap ctrlBmp;
         public float CurrentTime { get; private set; }
         protected float TimeStep { get; private set; }
 
         public event EventHandler<TransfromNeededEventArg> TransfromNeeded;
         public event EventHandler<NonLinearTransfromNeededEventArg> NonLinearTransfromNeeded;
-        public event EventHandler<PaintEventArgs> FramePaint;
+        public event EventHandler<PaintEventArgs> FramePainting;
+        public event EventHandler<PaintEventArgs> FramePainted;
+        public event EventHandler<MouseEventArgs> MouseDown;
 
+        public Control DoubleBitmap { get; private set; }
         public Control AnimatedControl { get; set; }
         Point[] buffer;
         byte[] pixelsBuffer;
-        public Bitmap frame;
         protected Rectangle clipRect;
         
         AnimateMode mode;
         Animation animation;
 
-        public new void Dispose()
+        public void Dispose()
         {
-            Hide();
             if (ctrlBmp != null)
-                bgBmp.Dispose();
-            if (ctrlBmp!=null)
+                BgBmp.Dispose();
+            if (ctrlBmp != null)
                 ctrlBmp.Dispose();
-            if (frame != null)
-                frame.Dispose();
+            if (Frame != null)
+                Frame.Dispose();
             AnimatedControl = null;
-            base.Dispose();
+
+            Hide();
+        }
+
+        public void Hide()
+        {
+            if (DoubleBitmap != null)
+                try
+                {
+                    DoubleBitmap.BeginInvoke(new MethodInvoker(() =>
+                    {
+                        if (DoubleBitmap.Visible) DoubleBitmap.Hide();
+                        DoubleBitmap.Parent = null;
+                        //DoubleBitmap.Dispose();
+                    }));
+                }
+                catch { }
         }
 
         protected virtual Rectangle GetBounds()
@@ -61,8 +80,15 @@ namespace AnimatorNS
                 rect.Height + animation.Padding.Top + animation.Padding.Bottom);
         }
 
-        public DoubleBitmap(Control control, AnimateMode mode, Animation animation, float timeStep, Rectangle controlClipRect)
+        public Controller(Control control, AnimateMode mode, Animation animation, float timeStep, Rectangle controlClipRect)
         {
+            DoubleBitmap = new DoubleBitmapControl();
+
+            (DoubleBitmap as IFakeControl).FramePainting += OnFramePainting;
+            (DoubleBitmap as IFakeControl).FramePainted += OnFramePainting;
+            (DoubleBitmap as IFakeControl).TransfromNeeded += OnTransfromNeeded;
+            DoubleBitmap.MouseDown += OnMouseDown;
+
             this.animation = animation;
             this.AnimatedControl = control;
             this.mode = mode;
@@ -78,36 +104,24 @@ namespace AnimatorNS
             if (this.TimeStep == 0f)
                 timeStep = 0.01f;
 
-            if (control.Parent == null)
-                throw new Exception("Can not create DoubleBitmap because animated control has not parent.");
-
-            Visible = false;
-            SetStyle(ControlStyles.Selectable, false);
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
-
             switch(mode)
             {
                 case AnimateMode.Hide:
                     {
-                        bgBmp = GetBackground(control);
-                        this.Bounds = GetBounds();
-                        this.Parent = control.Parent;
-                        var i = control.Parent.Controls.GetChildIndex(control);
-                        control.Parent.Controls.SetChildIndex(this, i);
+                        BgBmp = GetBackground(control);
+                        (DoubleBitmap as IFakeControl).InitParent(control, animation.Padding);
                         ctrlBmp = GetForeground(control);
-                        this.Visible = true;
+                        DoubleBitmap.Visible = true;
                         control.Visible = false;
                     }
                     break;
 
                 case AnimateMode.Show:
                     {
-                        bgBmp = GetBackground(control);
-                        var i = control.Parent.Controls.GetChildIndex(control);
-                        this.Parent = control.Parent;
-                        this.Bounds = GetBounds();
-                        control.Parent.Controls.SetChildIndex(this, i);
-                        this.Visible = true;
+                        BgBmp = GetBackground(control);
+                        (DoubleBitmap as IFakeControl).InitParent(control, animation.Padding);
+                        DoubleBitmap.Visible = true;
+                        DoubleBitmap.Refresh();
                         control.Visible = true;
                         ctrlBmp = GetForeground(control);
                     }
@@ -115,24 +129,60 @@ namespace AnimatorNS
                 case AnimateMode.BeginUpdate:
                 case AnimateMode.Update:
                     {
-                        this.Bounds = GetBounds();
-                        this.Parent = control.Parent;
-                        var i = control.Parent.Controls.GetChildIndex(control);
-                        control.Parent.Controls.SetChildIndex(this, i);
-                        bgBmp = GetBackground(control, true);
-                        this.Visible = true;
-#if debug
-                        bgBmp.Save("c:\\bgBmp.png");
-#endif
+                        (DoubleBitmap as IFakeControl).InitParent(control, animation.Padding);
+                        BgBmp = GetBackground(control, true);
+                        DoubleBitmap.Visible = true;
+
                     }
                     break;
             }
 
+#if debug
+            BgBmp.Save("c:\\bgBmp.png");
+            if (ctrlBmp != null)
+                ctrlBmp.Save("c:\\ctrlBmp.png");
+#endif
+
             CurrentTime = timeStep > 0 ? animation.MinTime : animation.MaxTime;
+        }
+
+        protected virtual void OnMouseDown(object sender, MouseEventArgs e)
+        {
+            if (MouseDown != null)
+                MouseDown(this, e);
+        }
+
+        protected virtual void OnFramePainting(object sender, PaintEventArgs e)
+        {
+            if (Frame != null)
+                Frame.Dispose();
+            Frame = null;
+
+            if (mode == AnimateMode.BeginUpdate)
+                return;
+
+            Frame = OnNonLinearTransfromNeeded();
+
+            var time = CurrentTime + TimeStep;
+            if (time > animation.MaxTime) time = animation.MaxTime;
+            if (time < animation.MinTime) time = animation.MinTime;
+            CurrentTime = time;
+
+            if (FramePainting != null)
+                FramePainting(this, e);
+        }
+
+        protected virtual void OnFramePainted(object sender, PaintEventArgs e)
+        {
+            if (FramePainted != null)
+                FramePainted(this, e);
         }
 
         protected virtual Bitmap GetBackground(Control ctrl, bool includeForeground = false, bool clip = false)
         {
+            if (ctrl is Form)
+                return GetScreenBackground(ctrl, includeForeground, clip);
+
             var bounds = GetBounds();
             var w = bounds.Width;
             var h = bounds.Height;
@@ -144,8 +194,6 @@ namespace AnimatorNS
             PaintEventArgs ea = new PaintEventArgs(Graphics.FromImage(bmp), clientRect);
             if (clip)
                 ea.Graphics.SetClip(clipRect);
-
-            //ea.Graphics.Clear(ctrl.Parent.BackColor);
 
             for (int i = ctrl.Parent.Controls.Count - 1; i >= 0; i--)
             {
@@ -170,57 +218,57 @@ namespace AnimatorNS
             return bmp;
         }
 
+        
+        private Bitmap GetScreenBackground(Control ctrl, bool includeForeground, bool clip)
+        {
+            var size = Screen.PrimaryScreen.Bounds.Size;
+            Graphics temp = DoubleBitmap.CreateGraphics();//???
+            var bmp = new Bitmap(size.Width, size.Height, temp);
+            Graphics gr = Graphics.FromImage(bmp);
+            gr.CopyFromScreen(0, 0, 0, 0, size);
+            return bmp;
+        }
+
+        /*
+        private Bitmap GetScreenBackground(Control ctrl, bool includeForeground, bool clip)
+        {
+            var size = GetBounds().Size;
+            Graphics temp = FakeControl.CreateGraphics();//???
+            var bmp = new Bitmap(size.Width, size.Height, temp);
+            Graphics gr = Graphics.FromImage(bmp);
+            var p = ctrl.Parent == null? ctrl.Location : ctrl.Parent.PointToScreen(ctrl.Location);
+            gr.CopyFromScreen(p.X - animation.Padding.Left, p.Y - animation.Padding.Top, 0, 0, size);
+            return bmp;
+        }*/
+
         protected virtual Bitmap GetForeground(Control ctrl)
         {
-            Bitmap bmp = new Bitmap(this.Width, this.Height);
+            Bitmap bmp = new Bitmap(DoubleBitmap.Width, DoubleBitmap.Height);
 
             if (!ctrl.IsDisposed)
-                ctrl.DrawToBitmap(bmp, new Rectangle(ctrl.Left - Left, ctrl.Top - Top, ctrl.Width, ctrl.Height));
+            {
+                if (DoubleBitmap.Parent == null)
+                {
+                    ctrl.DrawToBitmap(bmp, new Rectangle(animation.Padding.Left, animation.Padding.Top, ctrl.Width, ctrl.Height));
+                }
+                else
+                    ctrl.DrawToBitmap(bmp, new Rectangle(ctrl.Left - DoubleBitmap.Left, ctrl.Top - DoubleBitmap.Top, ctrl.Width, ctrl.Height));
+            }
 #if debug
             using (var gr = Graphics.FromImage(bmp))
-                gr.DrawLine(Pens.Red, 0, 0, Width, Height);
+                gr.DrawLine(Pens.Red, 0, 0, DoubleBitmap.Width, DoubleBitmap.Height);
 #endif
 
             return bmp;
         }
 
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            var gr = e.Graphics;
-
-            try
-            {
-                gr.DrawImage(bgBmp, 0, 0);
-
-                if (frame != null)
-                {
-                    var ea = new TransfromNeededEventArg()
-                                 {
-                                     CurrentTime = CurrentTime,
-                                     ClientRectangle = new Rectangle(0, 0, this.Width, this.Height)
-                                 };
-                    OnTransfromNeeded(ea);
-                    gr.SetClip(clipRect);
-                    gr.Transform = ea.Matrix;
-                    gr.DrawImage(frame, 0, 0);
-                }
-
-                OnFramePaint(e);
-            }
-            catch { }
-        }
-
-        protected virtual void OnFramePaint(PaintEventArgs e)
-        {
-            if (FramePaint != null)
-                FramePaint(this, e);
-        }
-
-        protected virtual void OnTransfromNeeded(TransfromNeededEventArg e)
+        protected virtual void OnTransfromNeeded(object sender, TransfromNeededEventArg e)
         {
             try
             {
+                e.ClipRectangle = clipRect;
+                e.CurrentTime = CurrentTime;
+
                 if (TransfromNeeded != null)
                     TransfromNeeded(this, e);
                 else
@@ -240,21 +288,25 @@ namespace AnimatorNS
 
         protected virtual Bitmap OnNonLinearTransfromNeeded()
         {
-            Bitmap bmp = (Bitmap)ctrlBmp.Clone();
-
-            const int bytesPerPixel = 4;
-            PixelFormat pxf = PixelFormat.Format32bppArgb;
-            Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
-            BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, pxf);
-            IntPtr ptr = bmpData.Scan0;
-            int numBytes = bmp.Width * bmp.Height * bytesPerPixel;
-            byte[] argbValues = new byte[numBytes];
-
-            System.Runtime.InteropServices.Marshal.Copy(ptr, argbValues, 0, numBytes);
+            Bitmap bmp = null;
+            if (ctrlBmp == null)
+                return null;
 
             try
             {
-                var e = new NonLinearTransfromNeededEventArg(){CurrentTime = CurrentTime,ClientRectangle = ClientRectangle,Pixels = argbValues,Stride = bmpData.Stride};
+                bmp = (Bitmap)ctrlBmp.Clone();
+
+                const int bytesPerPixel = 4;
+                PixelFormat pxf = PixelFormat.Format32bppArgb;
+                Rectangle rect = new Rectangle(0, 0, bmp.Width, bmp.Height);
+                BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, pxf);
+                IntPtr ptr = bmpData.Scan0;
+                int numBytes = bmp.Width * bmp.Height * bytesPerPixel;
+                byte[] argbValues = new byte[numBytes];
+
+                System.Runtime.InteropServices.Marshal.Copy(ptr, argbValues, 0, numBytes);
+
+                var e = new NonLinearTransfromNeededEventArg() { CurrentTime = CurrentTime, ClientRectangle = DoubleBitmap.ClientRectangle, Pixels = argbValues, Stride = bmpData.Stride };
 
                 if (NonLinearTransfromNeeded != null)
                     NonLinearTransfromNeeded(this, e);
@@ -269,13 +321,13 @@ namespace AnimatorNS
                     TransfromHelper.DoTransparent(e, animation);
                     TransfromHelper.DoLeaf(e, animation);
                 }
+
+                System.Runtime.InteropServices.Marshal.Copy(argbValues, 0, ptr, numBytes);
+                bmp.UnlockBits(bmpData);
             }
             catch
             {
             }
-
-            System.Runtime.InteropServices.Marshal.Copy(argbValues, 0, ptr, numBytes);
-            bmp.UnlockBits(bmpData);
 
             return bmp;
         }
@@ -287,7 +339,7 @@ namespace AnimatorNS
             bmp.Save("c:\\bmp.png");
 #endif
             if(animation.AnimateOnlyDifferences)
-                TransfromHelper.CalcDifference(bmp, bgBmp);
+                TransfromHelper.CalcDifference(bmp, BgBmp);
 
             ctrlBmp = bmp;
             mode = AnimateMode.Update;
@@ -303,19 +355,7 @@ namespace AnimatorNS
 
         internal void BuildNextFrame()
         {
-            if (frame != null)
-                frame.Dispose();
-
-            if (mode == AnimateMode.BeginUpdate)
-                return;
-
-            frame = OnNonLinearTransfromNeeded();
-
-            var time = CurrentTime + TimeStep;
-            if (time > animation.MaxTime) time = animation.MaxTime;
-            if (time < animation.MinTime) time = animation.MinTime;
-            CurrentTime = time;
-            Invalidate();
+            DoubleBitmap.Invalidate();
         }
     }
 }

@@ -59,6 +59,12 @@
     <Compile Include="Controls\PredefinedList.Designer.cs">
       <DependentUpon>PredefinedList.cs</DependentUpon>
     </Compile>
+    <Compile Include="DecorationSample.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DecorationSample.Designer.cs">
+      <DependentUpon>DecorationSample.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -81,6 +87,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\PredefinedList.resx">
       <DependentUpon>PredefinedList.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DecorationSample.resx">
+      <DependentUpon>DecorationSample.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

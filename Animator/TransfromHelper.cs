@@ -219,5 +219,113 @@ namespace AnimatorNS
                 e.Matrix.Rotate(360 * (e.CurrentTime - animation.RotateLimit) * animation.RotateCoeff);
             e.Matrix.Translate(-center.X, -center.Y);
         }
+
+        public static void DoBottomMirror(NonLinearTransfromNeededEventArg e)
+        {
+            var source = e.SourcePixels;
+            var output = e.Pixels;
+            
+            var s = e.Stride;
+            var dy = 1;
+            var beginY = e.SourceClientRectangle.Bottom + dy;
+            var sy = e.ClientRectangle.Height;
+            var beginX = e.SourceClientRectangle.Left;
+            var endX = e.SourceClientRectangle.Right;
+            var d = sy - beginY;
+
+            for (int x = beginX; x < endX; x++)
+            for (int y = beginY; y < sy; y++)
+            {
+                var sourceY = (int)(beginY - 1 - dy  - (y - beginY));
+                if (sourceY < 0)
+                    break;
+                var sourceX = x;
+                int sourceI = sourceY * s + sourceX * bytesPerPixel;
+                int outI = y * s + x * bytesPerPixel;
+                output[outI + 0] = source[sourceI + 0];
+                output[outI + 1] = source[sourceI + 1];
+                output[outI + 2] = source[sourceI + 2];
+                output[outI + 3] = (byte)((1 - 1f*(y - beginY)/d)*90);
+            }
+        }
+
+        /*
+        internal static void DoBottomShadow(NonLinearTransfromNeededEventArg e)
+        {
+            var source = e.SourcePixels;
+            var output = e.Pixels;
+
+            var s = e.Stride;
+            var dy = 1;
+            var beginY = e.SourceClientRectangle.Bottom + dy;
+            var sy = e.ClientRectangle.Height;
+            var beginX = e.SourceClientRectangle.Left;
+            var endX = e.SourceClientRectangle.Right;
+            var d = sy - beginY;
+
+            var bgG = source[0];
+            var bgB = source[1];
+            var bgR = source[2];
+
+            for (int x = beginX; x < endX; x++)
+                for (int y = beginY; y < sy; y++)
+                {
+                    var sourceY = (int)(beginY - 1 - dy - (y - beginY)*6);
+                    if (sourceY < 0)
+                        break;
+                    var sourceX = x;
+                    int sourceI = sourceY * s + sourceX * bytesPerPixel;
+                    int outI = y * s + x * bytesPerPixel;
+                    if (source[sourceI + 0] != bgG && source[sourceI + 1] != bgB && source[sourceI + 2] != bgR)
+                    {
+                        output[outI + 0] = 0;
+                        output[outI + 1] = 0;
+                        output[outI + 2] = 0;
+                        output[outI + 3] = (byte) ((1 - 1f*(y - beginY)/d)*90);
+                    }
+                }
+        }*/
+
+        public static void DoBlur(NonLinearTransfromNeededEventArg e, int r)
+        {
+            var output = e.Pixels;
+            var source = e.SourcePixels;
+
+            var s = e.Stride;
+            var sy = e.ClientRectangle.Height;
+            var sx = e.ClientRectangle.Width;
+            var maxI = source.Length - bytesPerPixel;
+
+            for (int x = r; x < sx - r; x++)
+            for (int y = r; y < sy - r; y++)
+            {
+                int outI = y * s + x * bytesPerPixel;
+
+                int R = 0, G = 0, B = 0, A = 0;
+                int counter = 0;
+                for (int xx = x - r; xx < x + r; xx++)
+                for (int yy = y - r; yy < y + r; yy++)
+                {
+                    int srcI = yy * s + xx * bytesPerPixel;
+                    if (srcI >= 0 && srcI < maxI)
+                    if(source[srcI + 3] > 0)
+                    {
+                        B += source[srcI + 0];
+                        G += source[srcI + 1];
+                        R += source[srcI + 2];
+                        A += source[srcI + 3];
+                        counter++;
+                    }
+                }
+                if (outI < maxI && counter > 5)
+                {
+                    output[outI + 0] = (byte)(B / counter);
+                    output[outI + 1] = (byte)(G / counter);
+                    output[outI + 2] = (byte)(R / counter);
+                    output[outI + 3] = (byte)(A / counter); 
+                    //output[outI + 3] = 255; //(byte)((1 - 1f * (y - beginY) / d) * 90);
+                }
+            }
+        }
     }
 }
